@@ -1,5 +1,12 @@
 # 更新日志
 
+## 0.6.1（2026-10-24）
+
+- 修复：管理员鉴权补齐主程序级操作员通道——`is_local_operator` 只标记 WebUI 控制台消息，QQ 侧操作员现按 bot_config `[plugin].permission`（`platform:id`）比对放行；命令解析依赖的 `text` / `is_local_operator` kwargs 已对照 Host 1.3.4 源码核实为实际下发（官方文档滞后）
+- 修复：README 移除已废弃的配置继承说明（0.2.0 起 `[ob]` 全部手填）
+- 插件类型改为 `management`（管理/权限类插件）
+- manifest 新增 `config.get` 能力声明（读取主程序操作员配置）
+
 ## 0.6.0（2026-10-24）
 
 - 新增：删好友后转告管理员（`block.notify_admin_on_remove`，默认开启）

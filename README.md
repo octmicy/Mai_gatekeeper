@@ -18,7 +18,7 @@ MaiBot 插件：好友申请审批（LLM 自动 / 管理员人工 / 混合）+ �
 | 屏蔽用户 | planner 工具 `block_user`（**仅群聊**） | 屏蔽作用域为本群，**受时长上限约束**（`max_duration_hours`，默认一天，到期自动解除；planner 可指定更短时长）；屏蔽成功后会在群里发一条提示告知对方；被屏蔽者消息在 `chat.receive.before_process` 阶段被完全丢弃（不入库、不回复、不计频率） |
 | 解除屏蔽 | planner 工具 `unblock_user`（**仅群聊**）/ `/block un` | |
 | 删除好友 | planner 工具 `remove_friend`（**仅私聊**） | 私聊中 planner 唯一可用的守门人工具；可选两步防误删（`remove_requires_block`）；删除后自动全局屏蔽 |
-| 管理命令 | `/fr list\|ok\|no`、`/block list\|un\|add` | 管理员 = `[admin].admin_ids`（空名单全拒），主程序级操作员（`is_local_operator`）自动放行 |
+| 管理命令 | `/fr list\|ok\|no`、`/block list\|un\|add` | 管理员 = `[admin].admin_ids` ∪ 主程序级操作员（bot_config `[plugin].permission`，格式 `platform:id`）∪ WebUI 本地控制台；admin_ids 为空时仅后两者可用 |
 
 ## 配置（config.toml）
 
@@ -49,8 +49,6 @@ notify_admin_on_block = false
 notify_admin_on_remove = true  # 删好友后转告管理员（不可逆操作，建议开启）
 ```
 
-连接配置解析规则：`[ob]` 手动填写的字段优先生效，留空的字段在 `inherit = true` 时从 `adapter_plugin_id` 指定的适配器插件配置继承（默认 `maibot-team.snowluma-adapter`）。
-
 ## 数据
 
 持久化在统一插件数据目录 `data/plugins/octmicy.mai-gatekeeper/gatekeeper.db`（SQLite）：
@@ -74,7 +72,7 @@ notify_admin_on_remove = true  # 删好友后转告管理员（不可逆操作�
 ## 测试
 
 ```
-tests/run_self_test.py       # 插件逻辑 mock 自测（68 项，含 on_load 全流程与配置继承重试）
+tests/run_self_test.py       # 插件逻辑 mock 自测（94 项，含 on_load 全流程与审批/屏蔽/命令全链路）
 tests/run_ob_client_test.py  # OneBotClient 对本地模拟对端的集成测试（12 项：鉴权/echo/事件/重连）
 ```
 

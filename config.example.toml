@@ -11,7 +11,7 @@ config_version = "1.0.0"
 
 [admin]
 # 管理员 QQ 号列表：可执行 /fr、/block 命令，并接收审批/屏蔽/删好友推送
-# 为空时管理命令全部拒绝；主程序级操作员（bot_config.toml [plugin].permission）始终放行
+# 此外主程序级操作员（bot_config.toml [plugin].permission）与 WebUI 控制台始终放行
 admin_ids = ["10000"]
 # 平台标识（一般保持 qq）
 platform = "qq"

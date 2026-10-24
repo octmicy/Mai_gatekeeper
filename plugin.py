@@ -780,7 +780,7 @@ class MaiGateKeeper(MaiBotPlugin):
     async def cmd_fr(self, **kwargs: Any) -> tuple[bool, str, int]:
         """好友申请查看与审批。"""
         stream_id = str(kwargs.get("stream_id") or "")
-        if not self._is_admin(kwargs):
+        if not await self._is_admin(kwargs):
             reply = "仅管理员可使用该命令"
         else:
             reply = await self._handle_fr_command(str(kwargs.get("text") or ""), str(kwargs.get("user_id") or ""))
@@ -836,7 +836,7 @@ class MaiGateKeeper(MaiBotPlugin):
     async def cmd_block(self, **kwargs: Any) -> tuple[bool, str, int]:
         """屏蔽名单查看与管理。"""
         stream_id = str(kwargs.get("stream_id") or "")
-        if not self._is_admin(kwargs):
+        if not await self._is_admin(kwargs):
             reply = "仅管理员可使用该命令"
         else:
             reply = await self._handle_block_command(
@@ -910,15 +910,39 @@ class MaiGateKeeper(MaiBotPlugin):
 
         return "用法：/block list · /block un … · /block add …"
 
-    def _is_admin(self, kwargs: Any) -> bool:
-        """管理员判定：插件 admin_ids 或主程序级操作员。空名单 fail-closed。"""
+    async def _is_admin(self, kwargs: Any) -> bool:
+        """管理员判定（三通道，任一命中即放行）。
+
+        1. WebUI 本地控制台：命令上下文的 is_local_operator 标志
+           （Host 下发；源码 core/local_operator.py 中它只标记控制台消息，
+           不覆盖 QQ 侧操作员）；
+        2. 插件配置 [admin].admin_ids；
+        3. 主程序级操作员：bot_config.toml [plugin].permission
+           （格式 ``platform:id``，平台前缀统一小写比对，
+           与主程序 build_scoped_user_id 规则一致）。
+        """
         if bool(kwargs.get("is_local_operator")):
             return True
         user_id = str(kwargs.get("user_id") or "").strip()
         if not user_id:
             return False
         admins = {str(a).strip() for a in self.config.admin.admin_ids}
-        return user_id in admins
+        if user_id in admins:
+            return True
+
+        permissions: Any = []
+        try:
+            permissions = await self.ctx.config.get("plugin.permission", [])
+        except Exception as exc:
+            LOGGER.debug(f"守门人读取主程序操作员配置失败: {exc}")
+        if isinstance(permissions, list):
+            platform = str(kwargs.get("platform") or "").strip().lower()
+            scoped = f"{platform}:{user_id}"
+            for entry in permissions:
+                parts = str(entry).strip().split(":", 1)
+                if len(parts) == 2 and f"{parts[0].strip().lower()}:{parts[1].strip()}" == scoped:
+                    return True
+        return False
 
     # ------------------------------------------------------------------
     # 组件作用域

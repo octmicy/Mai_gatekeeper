@@ -62,10 +62,14 @@ class FakeSend:
 
 
 class FakeConfigCap:
-    """mock ctx.config：get_plugin 返回宿主原始结构 {"success","value"}。"""
+    """mock ctx.config：get_plugin 返回宿主原始结构；get 读主程序配置。"""
 
     def __init__(self, plugin_configs: dict[str, dict[str, Any]] | None = None) -> None:
         self.plugin_configs = plugin_configs or {}
+        self.values: dict[str, Any] = {}
+
+    async def get(self, key: str, default: Any = None) -> Any:
+        return self.values.get(key, default)
 
     async def get_plugin(self, plugin_name: str | None = None) -> dict[str, Any]:
         value = self.plugin_configs.get(str(plugin_name))
@@ -622,6 +626,15 @@ async def test_commands() -> None:
     result = await plugin.cmd_block(text="/block list", stream_id="s1", user_id="99999", platform="qq")
     check("非管理员 /block 被拒且返回三元组", result[2] == 1 and "仅管理员" in result[1])
     check("拒绝信息已发送到会话", any("仅管理员" in s["text"] for s in ctx.send.sent))
+
+    # 主程序级操作员通道：bot_config [plugin].permission 命中即放行（不在 admin_ids 中）
+    ctx.config.values["plugin.permission"] = ["qq:88888"]
+    result = await plugin.cmd_block(text="/block list", stream_id="s1", user_id="88888", platform="qq")
+    check("主程序操作员（plugin.permission）放行", "屏蔽名单" in result[1] or "为空" in result[1])
+    # 同号但平台不匹配 → 拒绝
+    result = await plugin.cmd_block(text="/block list", stream_id="s1", user_id="88888", platform="telegram")
+    check("操作员平台不匹配被拒", "仅管理员" in result[1])
+    ctx.config.values["plugin.permission"] = []
 
     # is_local_operator 放行
     result = await plugin.cmd_block(

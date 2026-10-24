@@ -31,10 +31,10 @@ class PluginSectionSettings(PluginConfigBase):
 class AdminSettings(PluginConfigBase):
     """管理员配置。
 
-    管理员可执行 /fr、/block 管理命令；名单为空时所有管理命令一律拒绝
-    （fail-closed），好友申请仅按 approve.mode 的自动路径处理。
-    主程序级操作员（bot_config.toml [plugin].permission）通过命令上下文的
-    is_local_operator 标志放行，无需重复配置。
+    管理员可执行 /fr、/block 管理命令，三通道任一命中即放行：
+    1. 插件配置 admin_ids（名单为空时该通道关闭，fail-closed）；
+    2. 主程序级操作员：bot_config.toml [plugin].permission（格式 platform:id）；
+    3. WebUI 本地控制台（命令上下文的 is_local_operator 标志）。
     """
 
     __ui_label__ = "管理员"
@@ -46,7 +46,7 @@ class AdminSettings(PluginConfigBase):
         description="管理员用户 ID（QQ 号）列表；为空时管理命令全部拒绝",
         json_schema_extra={
             "label": "管理员 QQ 列表",
-            "hint": "可执行 /fr、/block 命令并接收审批推送的管理员。为空时管理命令全部拒绝（fail-closed）；主程序级操作员始终放行。",
+            "hint": "可执行 /fr、/block 命令并接收审批推送的管理员。此外，主程序级操作员（bot_config.toml [plugin].permission）与 WebUI 控制台始终放行。",
             "placeholder": "例如：[\"123456789\"]",
         },
     )
