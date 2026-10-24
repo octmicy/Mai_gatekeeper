@@ -2,8 +2,6 @@
 
 MaiBot 插件：好友申请审批（LLM 自动 / 管理员人工 / 混合）+ 用户屏蔽（发言拦截、私聊删好友）。
 
-**不修改任何适配器**：插件自建一条 OneBot v11 正向 WebSocket，以第二个客户端身份直连对端（NapCat / SnowLuma 通用），用于接收好友申请事件（`post_type == "request"`，适配器路由层不处理该事件）并执行 `set_friend_add_request` / `delete_friend` 等 action。消息层功能（拦截、工具、命令）走 MaiBot 插件标准能力。
-
 > 配置示例见 [`config.example.toml`](config.example.toml)：复制为 `config.toml` 后按需修改（首次加载也会自动生成默认配置）。更新历史见 [CHANGELOG.md](CHANGELOG.md)。
 
 ## 安装
