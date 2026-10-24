@@ -26,8 +26,8 @@ mode = "hybrid"
 confidence_threshold = 0.7
 # 附加给 LLM 审批员的补充规则，例如："熟人群友通常会在验证消息里提到 XX 群"
 extra_rules = ""
-# auto/hybrid 模式下 LLM 直接执行后，是否仍向管理员推送结果摘要
-push_admin_on_auto = true
+# 任何路径完成好友申请审批（同意/拒绝）后，向全部管理员推送结果
+notify_admin_on_decision = true
 
 [ob]
 # OneBot v11 对端连接（NapCat / SnowLuma 通用）

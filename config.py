@@ -98,12 +98,12 @@ class ApproveSettings(PluginConfigBase):
             "placeholder": "可留空",
         },
     )
-    push_admin_on_auto: bool = Field(
+    notify_admin_on_decision: bool = Field(
         default=True,
-        description="auto/hybrid 模式下 LLM 直接执行后，是否仍向管理员推送结果摘要",
+        description="好友申请审批完成后（同意/拒绝，任何路径：LLM 自动、管理员命令、屏蔽自动拒绝）是否向全部管理员推送结果",
         json_schema_extra={
-            "label": "推送审批结果摘要",
-            "hint": "auto/hybrid 模式下 LLM 直接同意/拒绝后，是否仍向管理员私聊推送一条结果摘要（便于事后追查）。",
+            "label": "审批结果通知管理员",
+            "hint": "开启后任何路径完成好友申请审批（同意或拒绝）都会向全部管理员私聊推送结果记录。建议保持开启。",
         },
     )
 

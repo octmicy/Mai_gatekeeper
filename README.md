@@ -30,6 +30,7 @@ admin_ids = ["你的QQ号"]   # 管理员；为空时管理命令全部拒绝
 mode = "hybrid"            # auto / manual / hybrid
 confidence_threshold = 0.7 # hybrid 下 LLM 置信度阈值
 extra_rules = ""           # 给 LLM 审批员的补充规则
+notify_admin_on_decision = true # 任何路径完成审批后向全部管理员推送结果
 
 [ob]
 server = "127.0.0.1"      # OneBot v11 对端地址（NapCat / SnowLuma 通用，必填）

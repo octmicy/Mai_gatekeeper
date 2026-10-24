@@ -163,7 +163,7 @@ def base_config() -> dict[str, Any]:
             "mode": "manual",
             "confidence_threshold": 0.7,
             "extra_rules": "",
-            "push_admin_on_auto": True,
+            "notify_admin_on_decision": True,
         },
         "ob": {
             "server": "",
@@ -369,6 +369,12 @@ async def test_friend_request_flows() -> None:
         ),
     )
 
+    # 审批结果推送：管理员命令路径也通知（推送到管理员会话，区别于命令回复流 s1）
+    check(
+        "/fr ok 后管理员会话收到结果推送",
+        any("已同意" in s["text"] and s["stream_id"] == "stream-admin-10001" for s in ctx.send.sent),
+    )
+
     # 非管理员命令被拒（管理员判定在 cmd_fr 层）
     result = await plugin.cmd_fr(text=f"/fr ok {manual_row}", stream_id="s1", user_id="99999")
     check("非管理员被拒绝", "仅管理员" in result[1])
@@ -385,6 +391,17 @@ async def test_friend_request_flows() -> None:
     auto_row = row_id_by_flag(store, "FLAG-2")
     check("auto：直接 approved", store.get_friend_request(auto_row)["status"] == "approved")
     check("auto：推送结果摘要", any("已同意" in s["text"] for s in ctx.send.sent))
+    # 关闭审批结果推送后不再推送
+    plugin._plugin_config_instance.approve.notify_admin_on_decision = False
+    await plugin._on_ob_event(
+        {"post_type": "request", "request_type": "friend", "flag": "FLAG-2B", "user_id": "40012", "comment": "hi"}
+    )
+    sent_before = len(ctx.send.sent)
+    await plugin._on_ob_event(
+        {"post_type": "request", "request_type": "friend", "flag": "FLAG-2C", "user_id": "40013", "comment": "yo"}
+    )
+    check("关闭审批结果推送后不再推送", len(ctx.send.sent) == sent_before)
+    plugin._plugin_config_instance.approve.notify_admin_on_decision = True
     await plugin.on_unload()
 
     # hybrid 低置信：转人工 pending

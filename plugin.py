@@ -230,11 +230,8 @@ class MaiGateKeeper(MaiBotPlugin):
         platform = self.config.admin.platform
 
         if store.is_blocked_any_scope(platform, user_id):
-            outcome = await self._execute_decision(row_id, False, "auto:blocked", "命中屏蔽名单，自动拒绝")
-            summary = "已自动拒绝" if outcome == "rejected" else f"处理结果异常（{outcome}）"
-            await self._push_admins(
-                f"【守门人】屏蔽用户 {user_id}（{nickname or '未知昵称'}）发来好友申请，{summary}。"
-            )
+            # 命中屏蔽名单：任何模式都直接拒绝（结果推送由 _execute_decision 统一发出）
+            await self._execute_decision(row_id, False, "auto:blocked", "命中屏蔽名单，自动拒绝")
             return
 
         if approve_cfg.mode == "manual":
@@ -256,13 +253,7 @@ class MaiGateKeeper(MaiBotPlugin):
 
         if direct_execute:
             decided_by = f"llm:auto(conf={confidence:.2f})"
-            outcome = await self._execute_decision(row_id, approve, decided_by, reason)
-            if approve_cfg.push_admin_on_auto:
-                action_text = {"approved": "已同意", "rejected": "已拒绝"}.get(outcome, f"结果异常（{outcome}）")
-                await self._push_admins(
-                    f"【守门人】好友申请 #{row_id} {user_id}（{nickname or '未知昵称'}）"
-                    f"经 LLM 审批{action_text}。理由：{reason}（置信 {confidence:.2f}）"
-                )
+            await self._execute_decision(row_id, approve, decided_by, reason)
         else:
             llm_summary = (
                 f"LLM 建议{'同意' if approve else '拒绝'}（置信 {confidence:.2f}，低于阈值，"
@@ -346,6 +337,16 @@ class MaiGateKeeper(MaiBotPlugin):
             status = "approved" if approve else "rejected"
             store.update_friend_request(row_id, status, decided_by, reason)
             LOGGER.info(f"守门人申请 #{row_id} {status}（{decided_by}）：{reason}")
+
+            # 审批结果通知全部管理员（统一出口，覆盖所有路径：
+            # LLM 自动 / 管理员命令 / 命中屏蔽自动拒绝）
+            if self.config.approve.notify_admin_on_decision:
+                action = "同意" if approve else "拒绝"
+                reason_note = f"：{reason}" if reason else ""
+                await self._push_admins(
+                    f"【守门人】好友申请 #{row_id} {request['user_id']}"
+                    f"（{request['nickname'] or '未知昵称'}）已{action}（{decided_by}）{reason_note}"
+                )
             return status
 
         detail = ""

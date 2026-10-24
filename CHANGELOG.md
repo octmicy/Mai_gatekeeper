@@ -1,5 +1,10 @@
 # 更新日志
 
+## 0.6.2（2026-10-24）
+
+- 新增：好友申请审批结果统一通知——任何路径（LLM 自动 / 管理员 `/fr` 命令 / 命中屏蔽自动拒绝）完成同意或拒绝后，向**全部**管理员推送结果记录（`approve.notify_admin_on_decision`，默认开启；替代原 `push_admin_on_auto`，其只覆盖 LLM 自动路径）
+- planner 删好友的通知（`block.notify_admin_on_remove`）自 0.6.0 起已有，保持不变
+
 ## 0.6.1（2026-10-24）
 
 - 修复：管理员鉴权补齐主程序级操作员通道——`is_local_operator` 只标记 WebUI 控制台消息，QQ 侧操作员现按 bot_config `[plugin].permission`（`platform:id`）比对放行；命令解析依赖的 `text` / `is_local_operator` kwargs 已对照 Host 1.3.4 源码核实为实际下发（官方文档滞后）
