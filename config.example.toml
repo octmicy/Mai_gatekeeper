@@ -1,0 +1,63 @@
+# 麦麦守门人（Mai_gatekeeper）配置示例
+#
+# 使用方法：复制本文件为 config.toml 并按需修改。
+# （首次加载时若不存在 config.toml，主程序也会按默认值自动生成）
+
+[plugin]
+# 插件总开关：关闭后停止 OneBot 连接、不再拦截发言、工具与命令全部停用
+enabled = true
+# 配置 schema 版本，请勿手动修改
+config_version = "1.0.0"
+
+[admin]
+# 管理员 QQ 号列表：可执行 /fr、/block 命令，并接收审批/屏蔽/删好友推送
+# 为空时管理命令全部拒绝；主程序级操作员（bot_config.toml [plugin].permission）始终放行
+admin_ids = ["10000"]
+# 平台标识（一般保持 qq）
+platform = "qq"
+
+[approve]
+# 好友申请审批模式：
+#   auto   = LLM 全自动决定，不打扰管理员
+#   manual = 全部推送管理员私聊人工审批（/fr ok|no 序号）
+#   hybrid = LLM 先审，高置信直接执行，低置信或可疑时转管理员（推荐）
+mode = "hybrid"
+# hybrid 模式下 LLM 置信度达到该值才直接执行（0~1）
+confidence_threshold = 0.7
+# 附加给 LLM 审批员的补充规则，例如："熟人群友通常会在验证消息里提到 XX 群"
+extra_rules = ""
+# auto/hybrid 模式下 LLM 直接执行后，是否仍向管理员推送结果摘要
+push_admin_on_auto = true
+
+[ob]
+# OneBot v11 对端连接（NapCat / SnowLuma 通用）
+# 填写对端正向 WebSocket 服务端信息（与适配器所连的是同一个对端，
+# 插件以第二个客户端身份并存连接，互不影响）
+server = "127.0.0.1"
+port = 3001
+# 访问令牌：与 NapCat/SnowLuma 网络设置中的 access token 一致；未开启校验时留空
+token = "your-access-token"
+heartbeat_interval = 30.0
+reconnect_delay_sec = 5.0
+action_timeout_sec = 15.0
+
+[block]
+# 拦截被屏蔽用户的发言（消息完全丢弃：不入库、不回复、不计频率）
+intercept_enabled = true
+# planner 群聊屏蔽的时长上限（小时），到期自动解除；0 表示不限制
+# planner 可指定更短时长，但不能超过该上限；管理员 /block add 的屏蔽始终永久
+max_duration_hours = 24.0
+# 额外保护名单：这些用户不可被 planner 屏蔽或删除好友（管理员自动受保护）
+protect_user_ids = []
+# 是否启用私聊删好友工具（remove_friend）
+allow_remove_friend = true
+# 删好友前是否要求对方已在屏蔽名单中（两步防误删；开启后需管理员先 /block add）
+remove_requires_block = false
+# planner 屏蔽用户后是否在当前会话发送提示
+notify_blocked_user = true
+# 屏蔽提示文案模板：{user}=昵称或ID，{duration}=时长（如 24 小时；永久屏蔽时为「永久」）；留空用默认
+blocked_tip_template = "⚠️ {user} 已被屏蔽（{duration}），期间麦麦将不再回应其发言。"
+# planner 屏蔽用户后是否向管理员推送通知
+notify_admin_on_block = false
+# planner 删除好友后是否向管理员推送通知（删好友不可逆，建议保持开启）
+notify_admin_on_remove = true

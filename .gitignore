@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# 运行时数据与真实配置（含 token / QQ 号，勿提交）
+config.toml
+data/
+*.db
+*.db-wal
+*.db-shm
+
+# 测试与临时产物
+.pytest_cache/
+*.log
