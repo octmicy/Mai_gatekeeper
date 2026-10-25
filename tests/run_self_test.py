@@ -8,7 +8,7 @@
 - 好友申请流：manual 推送、auto 直接执行、hybrid 低置信转人工、
   命中屏蔽自动拒绝、重复 flag 去重、flag 失效标记 expired
 - planner 工具：block_user（message_id 反查/保护名单/重复屏蔽）、
-  unblock_user、remove_friend（两步防误删开关、自动全局屏蔽）
+  unblock_user、remove_friend（目标固定为当前对话对象、自动全局屏蔽）
 - 管理命令：/fr list|ok|no、/block list|add|un、管理员判定（含 is_local_operator）
 - 三元组返回值、chat_scope 顶层注入、工厂函数
 """
@@ -178,7 +178,6 @@ def base_config() -> dict[str, Any]:
             "max_duration_hours": 24.0,
             "protect_user_ids": ["20002"],
             "allow_remove_friend": True,
-            "remove_requires_block": False,
             "notify_blocked_user": True,
             "blocked_tip_template": "⚠️ {user} 已被屏蔽（{duration}），期间麦麦将不再回应其发言。",
             "notify_admin_on_block": False,
@@ -561,15 +560,6 @@ async def test_tools() -> None:
     await asyncio.sleep(0.1)
     check("关闭开关后删好友不再转告", result["success"] is True and len(ctx.send.sent) == sent_before)
     plugin._plugin_config_instance.block.notify_admin_on_remove = True
-
-    # 两步防误删
-    plugin._plugin_config_instance.block.remove_requires_block = True
-    store.remove_blocked_by_user("qq", "50003")
-    result = await plugin.tool_remove_friend(user_id="50003", platform="qq")
-    check("两步防误删：未屏蔽先删被拒", result["success"] is False and "先" in result["content"])
-    store.add_blocked("qq", "50003", "global", "t", "t")
-    result = await plugin.tool_remove_friend(user_id="50003", platform="qq")
-    check("两步防误删：已屏蔽后允许", result["success"] is True)
 
     # 开关关闭
     plugin._plugin_config_instance.block.allow_remove_friend = False

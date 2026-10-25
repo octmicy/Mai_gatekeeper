@@ -213,14 +213,6 @@ class BlockSettings(PluginConfigBase):
             "hint": "是否向 planner 开放私聊删好友工具。工具只能删除当前私聊的对方，无法指定其他用户；关闭后 planner 无法删除好友，仅可屏蔽。",
         },
     )
-    remove_requires_block: bool = Field(
-        default=False,
-        description="删好友前是否要求对方已在屏蔽名单中（两步防误删；关闭则 planner 可直接删）",
-        json_schema_extra={
-            "label": "删好友需先屏蔽（两步防误删）",
-            "hint": "开启后需管理员先用 /block add 全局屏蔽对方，planner 才能删除其好友。默认关闭（planner 可直接删除当前私聊对象）。",
-        },
-    )
     notify_blocked_user: bool = Field(
         default=True,
         description="planner 屏蔽用户后，是否在当前会话发送提示（告知对方已被屏蔽）",

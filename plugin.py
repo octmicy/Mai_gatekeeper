@@ -9,7 +9,7 @@
 - 用户屏蔽：planner 工具 ``block_user`` / ``unblock_user``（仅群聊，
   屏蔽作用域为本群且受 ``block.max_duration_hours`` 时长上限约束——
   默认一天，到期自动解除；屏蔽成功后向当前会话发送提示告知对方）
-  + ``remove_friend``（仅私聊删好友，可选两步防误删）。被屏蔽用户的
+  + ``remove_friend``（仅私聊删好友）。被屏蔽用户的
   发言在 ``chat.receive.before_process`` 阶段 abort——不入库、不建会话、
   不触发回复、不计频率。
 - 管理命令：/fr（好友申请 list/ok/no）、/block（屏蔽名单 list/un/add）。
@@ -667,7 +667,7 @@ class MaiGateKeeper(MaiBotPlugin):
         detailed_description=(
             "只能删除正在与机器人私聊的对方，工具不接受指定其他用户。"
             "删除好友后会自动全局屏蔽对方，防止其再次申请好友。"
-            "保护名单用户不可删除；配置开启两步防误删时，需管理员先 /block add 屏蔽才能执行。"
+            "保护名单用户不可删除。"
         ),
         parameters=[
             ToolParameterInfo(
@@ -704,11 +704,6 @@ class MaiGateKeeper(MaiBotPlugin):
 
         store = self._require_store()
         platform = str(kwargs.get("platform") or self.config.admin.platform)
-        if self.config.block.remove_requires_block and not store.is_blocked_any_scope(platform, peer):
-            return {
-                "success": False,
-                "content": "对方尚未被屏蔽；需管理员先用 /block add 全局屏蔽后，才能删除好友（两步防误删）",
-            }
 
         try:
             response = await client.call_action(

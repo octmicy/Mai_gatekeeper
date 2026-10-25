@@ -17,7 +17,7 @@ MaiBot 插件：好友申请审批（LLM 自动 / 管理员人工 / 混合）+ �
 | 好友申请审批 | 自动（WS 事件） | `approve.mode`：`auto`（LLM 全自动）/ `manual`（推送管理员）/ `hybrid`（LLM 先审，低置信转人工，默认）；命中屏蔽名单的申请人一律直接拒绝 |
 | 屏蔽用户 | planner 工具 `block_user`（**仅群聊**） | 屏蔽作用域为本群，**受时长上限约束**（`max_duration_hours`，默认一天，到期自动解除；planner 可指定更短时长）；屏蔽成功后会在群里发一条提示告知对方；被屏蔽者消息在 `chat.receive.before_process` 阶段被完全丢弃（不入库、不回复、不计频率） |
 | 解除屏蔽 | planner 工具 `unblock_user`（**仅群聊**）/ `/block un` | |
-| 删除好友 | planner 工具 `remove_friend`（**仅私聊**） | 私聊中 planner 唯一可用的守门人工具；**目标固定为当前对话对象，工具不接受指定其他用户**（防诱导删除任意好友）；可选两步防误删（`remove_requires_block`）；删除后自动全局屏蔽并通知管理员 |
+| 删除好友 | planner 工具 `remove_friend`（**仅私聊**） | 私聊中 planner 唯一可用的守门人工具；**目标固定为当前对话对象，工具不接受指定其他用户**（防诱导删除任意好友）；删除后自动全局屏蔽并通知管理员 |
 | 管理命令 | `/fr list\|ok\|no`、`/block list\|un\|add` | 管理员 = `[admin].admin_ids` ∪ 主程序级操作员（bot_config `[plugin].permission`，格式 `platform:id`）∪ WebUI 本地控制台；admin_ids 为空时仅后两者可用 |
 
 ## 配置（config.toml）
@@ -42,7 +42,6 @@ intercept_enabled = true
 max_duration_hours = 24.0   # planner 群聊屏蔽的时长上限（小时），到期自动解除；0 = 不限制
 protect_user_ids = []      # 额外保护名单（不可被屏蔽/删好友）
 allow_remove_friend = true
-remove_requires_block = false
 notify_blocked_user = true # 屏蔽成功后向当前会话发送提示
 # 提示文案模板：{user}=昵称或ID，{duration}=时长（如 24 小时；永久屏蔽时为「永久」）；留空用默认
 blocked_tip_template = "⚠️ {user} 已被屏蔽（{duration}），期间麦麦将不再回应其发言。"
