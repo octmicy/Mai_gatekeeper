@@ -660,40 +660,40 @@ class MaiGateKeeper(MaiBotPlugin):
         name="remove_friend",
         description=(
             "删除当前私聊对象的好友关系（私聊专用）。"
+            "目标固定为当前对话的对方，无法指定其他人。"
             "适用于对方持续骚扰且屏蔽不足以解决问题的场景；这是不可逆操作，谨慎使用。"
         ),
         brief_description="删除私聊对象好友（不可逆，谨慎使用）",
         detailed_description=(
-            "删除好友后通常会自动全局屏蔽对方，防止其再次申请好友。"
-            "保护名单用户不可删除；配置开启两步防误删时，需先屏蔽对方才能执行。"
+            "只能删除正在与机器人私聊的对方，工具不接受指定其他用户。"
+            "删除好友后会自动全局屏蔽对方，防止其再次申请好友。"
+            "保护名单用户不可删除；配置开启两步防误删时，需管理员先 /block add 屏蔽才能执行。"
         ),
         parameters=[
             ToolParameterInfo(
-                name="user_id",
-                param_type=ToolParamType.STRING,
-                description="要删除好友的用户ID（私聊中通常可省略，默认为当前对话对象）",
-                required=False,
-            ),
-            ToolParameterInfo(
                 name="reason",
                 param_type=ToolParamType.STRING,
-                description="删除原因（简短，会记录日志）",
+                description="删除原因（简短，会记录日志并通知管理员）",
                 required=False,
             ),
         ],
     )
-    async def tool_remove_friend(
-        self, user_id: str = "", reason: str = "", **kwargs: Any
-    ) -> dict[str, Any]:
-        """私聊删好友工具。"""
+    async def tool_remove_friend(self, reason: str = "", **kwargs: Any) -> dict[str, Any]:
+        """私聊删好友工具（目标固定为当前对话对象）。
+
+        安全约束：不提供 user_id 参数——LLM 若能传同名参数会覆盖 Host
+        注入的真实发送者（component_query 的合并规则是工具参数优先），
+        等于可以指定删除任意好友。目标只能取自 kwargs["user_id"]，
+        即 Host 从消息上下文注入的当前私聊对象。
+        """
         if not self._tool_ready():
             return {"success": False, "content": "守门人插件未就绪"}
         if not self.config.block.allow_remove_friend:
             return {"success": False, "content": "删好友功能已在配置中关闭"}
 
-        peer = str(user_id or "").strip() or str(kwargs.get("user_id") or "").strip()
+        peer = str(kwargs.get("user_id") or "").strip()
         if not peer:
-            return {"success": False, "content": "无法确定要删除好友的对象"}
+            return {"success": False, "content": "无法确定当前对话对象，拒绝执行删除"}
 
         if self._is_protected(peer):
             return {"success": False, "content": f"用户 {peer} 在保护名单中，不可删除好友"}
@@ -707,7 +707,7 @@ class MaiGateKeeper(MaiBotPlugin):
         if self.config.block.remove_requires_block and not store.is_blocked_any_scope(platform, peer):
             return {
                 "success": False,
-                "content": "对方尚未被屏蔽；请先使用 block_user 屏蔽，再删除好友（两步防误删）",
+                "content": "对方尚未被屏蔽；需管理员先用 /block add 全局屏蔽后，才能删除好友（两步防误删）",
             }
 
         try:

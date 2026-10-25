@@ -207,10 +207,10 @@ class BlockSettings(PluginConfigBase):
     )
     allow_remove_friend: bool = Field(
         default=True,
-        description="是否启用私聊删好友工具（remove_friend）",
+        description="是否启用私聊删好友工具（remove_friend，目标固定为当前对话对象，不可指定他人）",
         json_schema_extra={
             "label": "启用删好友工具",
-            "hint": "是否向 planner 开放私聊删好友工具（remove_friend）。关闭后 planner 无法删除好友，仅可屏蔽。",
+            "hint": "是否向 planner 开放私聊删好友工具。工具只能删除当前私聊的对方，无法指定其他用户；关闭后 planner 无法删除好友，仅可屏蔽。",
         },
     )
     remove_requires_block: bool = Field(
@@ -218,7 +218,7 @@ class BlockSettings(PluginConfigBase):
         description="删好友前是否要求对方已在屏蔽名单中（两步防误删；关闭则 planner 可直接删）",
         json_schema_extra={
             "label": "删好友需先屏蔽（两步防误删）",
-            "hint": "开启后需管理员先用 /block add 全局屏蔽对方，planner 才能删除其好友（block_user 工具仅群聊可用）。默认关闭（私聊中 planner 可直接决定删除）。",
+            "hint": "开启后需管理员先用 /block add 全局屏蔽对方，planner 才能删除其好友。默认关闭（planner 可直接删除当前私聊对象）。",
         },
     )
     notify_blocked_user: bool = Field(

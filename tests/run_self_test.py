@@ -535,7 +535,7 @@ async def test_tools() -> None:
     result = await plugin.tool_unblock_user(user_id="50001", group_id="70001", platform="qq")
     check("unblock_user 解除群级屏蔽", result["success"] is True and not store.is_blocked("qq", "50001", "70001"))
 
-    # remove_friend：默认直接删 + 自动全局屏蔽
+    # remove_friend：默认直接删 + 自动全局屏蔽（user_id 经 kwargs 注入 = 当前对话对象）
     result = await plugin.tool_remove_friend(reason="骚扰", user_id="50002", platform="qq")
     check("remove_friend 成功", result["success"] is True)
     check(
@@ -543,6 +543,10 @@ async def test_tools() -> None:
         any(a["action"] == "delete_friend" and a["params"]["user_id"] == 50002 for a in client.actions),
     )
     check("删除好友后自动全局屏蔽", store.is_blocked("qq", "50002", ""))
+
+    # 无法确定当前对话对象时拒绝（fail-closed）
+    result = await plugin.tool_remove_friend(reason="x", platform="qq")
+    check("缺当前对话对象时拒绝删除", result["success"] is False and "拒绝" in result["content"])
 
     # 删好友转告管理员（默认开启；create_task 异步推送，等一拍）
     await asyncio.sleep(0.1)
@@ -743,6 +747,10 @@ def test_components_scope() -> None:
     check("block_user 为 group", by_name.get("block_user", {}).get("chat_scope") == "group")
     check("unblock_user 为 group", by_name.get("unblock_user", {}).get("chat_scope") == "group")
     check("拦截 Hook 已注册", any(str(c.get("type") or "").upper() == "HOOK_HANDLER" for c in components))
+    import inspect
+    from Mai_gatekeeper.plugin import MaiGateKeeper as _GK
+    sig = inspect.signature(_GK.tool_remove_friend)
+    check("remove_friend 无 user_id 形参（不可指定目标）", "user_id" not in sig.parameters)
 
 
 async def main() -> None:

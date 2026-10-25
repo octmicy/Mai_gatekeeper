@@ -49,9 +49,9 @@ intercept_enabled = true
 max_duration_hours = 24.0
 # 额外保护名单：这些用户不可被 planner 屏蔽或删除好友（管理员自动受保护）
 protect_user_ids = []
-# 是否启用私聊删好友工具（remove_friend）
+# 是否启用私聊删好友工具（目标固定为当前对话对象，不可指定他人）
 allow_remove_friend = true
-# 删好友前是否要求对方已在屏蔽名单中（两步防误删；开启后需管理员先 /block add）
+# 删好友前是否要求对方已被管理员屏蔽（两步防误删；开启后需先 /block add）
 remove_requires_block = false
 # planner 屏蔽用户后是否在当前会话发送提示
 notify_blocked_user = true
