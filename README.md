@@ -41,7 +41,7 @@ token = ""                # 访问令牌，与对端网络设置一致；未开�
 intercept_enabled = true
 max_duration_hours = 24.0   # planner 群聊屏蔽的时长上限（小时），到期自动解除；0 = 不限制
 protect_user_ids = []      # 额外保护名单（不可被屏蔽/删好友）
-allow_remove_friend = true
+allow_remove_friend = false  # 删好友不可逆，默认关闭；确认需要时再开启
 notify_blocked_user = true # 屏蔽成功后向当前会话发送提示
 # 提示文案模板：{user}=昵称或ID，{duration}=时长（如 24 小时；永久屏蔽时为「永久」）；留空用默认
 blocked_tip_template = "⚠️ {user} 已被屏蔽（{duration}），期间麦麦将不再回应其发言。"

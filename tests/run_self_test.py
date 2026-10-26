@@ -177,7 +177,7 @@ def base_config() -> dict[str, Any]:
             "intercept_enabled": True,
             "max_duration_hours": 24.0,
             "protect_user_ids": ["20002"],
-            "allow_remove_friend": True,
+            "allow_remove_friend": True,  # 用例显式开启；代码默认值为 False（见 test_default_config_safety）
             "notify_blocked_user": True,
             "blocked_tip_template": "⚠️ {user} 已被屏蔽（{duration}），期间麦麦将不再回应其发言。",
             "notify_admin_on_block": False,
@@ -743,6 +743,30 @@ def test_components_scope() -> None:
     check("remove_friend 无 user_id 形参（不可指定目标）", "user_id" not in sig.parameters)
 
 
+async def test_default_config_safety() -> None:
+    """出厂默认配置的安全姿态：删好友工具默认关闭。"""
+    from Mai_gatekeeper.config import GateKeeperConfig
+
+    defaults = GateKeeperConfig()
+    check("默认 allow_remove_friend=False", defaults.block.allow_remove_friend is False)
+    check("默认拦截开启", defaults.block.intercept_enabled is True)
+    check("默认审批 hybrid", defaults.approve.mode == "hybrid")
+    check("默认屏蔽时长上限 24h", defaults.block.max_duration_hours == 24.0)
+    check("默认管理员名单为空（fail-closed）", defaults.admin.admin_ids == [])
+    check("默认审批结果通知开启", defaults.approve.notify_admin_on_decision is True)
+    check("默认删好友通知开启", defaults.block.notify_admin_on_remove is True)
+
+    # 默认配置下（未开启开关）删除被拒
+    plugin, _ctx = make_plugin(overrides={"block": {"allow_remove_friend": False}})
+    await plugin.on_load()
+    client = FakeObClient()
+    plugin._client = client
+    result = await plugin.tool_remove_friend(reason="x", user_id="50090", platform="qq")
+    check("默认关闭时删除被拒", result["success"] is False and "关闭" in result["content"])
+    check("未产生 delete_friend action", not any(a["action"] == "delete_friend" for a in client.actions))
+    await plugin.on_unload()
+
+
 async def main() -> None:
     tests = [
         ("生命周期与手动配置", test_lifecycle_and_manual_config),
@@ -753,6 +777,7 @@ async def main() -> None:
         ("管理命令", test_commands),
         ("store 到期与迁移", test_store_expiry),
         ("组件作用域与工厂", test_components_scope),
+        ("出厂默认配置安全姿态", test_default_config_safety),
     ]
     for name, fn in tests:
         print(f"\n===== {name} =====")
